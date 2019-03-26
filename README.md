@@ -1,6 +1,6 @@
 # TEAMGrid
 
-Multiagent gridworld environment for the TEAM project.
+Multiagent gridworld environment for the TEAM project: Temporal abstraction in cooperative multi-agent systems.
 
 Requirements:
 - Python 3.5+
