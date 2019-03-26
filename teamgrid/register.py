@@ -5,9 +5,9 @@ env_list = []
 def register(
     id,
     entry_point,
-    reward_threshold=900
+    reward_threshold=0.99
 ):
-    assert id.startswith("MiniGrid-")
+    assert id.startswith("TEAMGrid-")
     assert id not in env_list
 
     # Register the environment with OpenAI gym

@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from gym_minigrid.minigrid import *
-from gym_minigrid.register import register
-
+from teamgrid.minigrid import *
+from teamgrid.register import register
 
 class FourRoomsEnv(MiniGridEnv):
     """
-    Classical 4 rooms Gridworld environmnet.
+    Classical 4 rooms gridworld environmnet.
     Can specify agent and goal position, if not it set at random.
     """
 
-    def __init__(self, agent_pos=None, goal_pos=None):
-        self._agent_default_pos = agent_pos
-        self._goal_default_pos = goal_pos
+    def __init__(self):
         super().__init__(grid_size=19, max_steps=100)
 
     def _gen_grid(self, width, height):
@@ -52,19 +49,10 @@ class FourRoomsEnv(MiniGridEnv):
                     self.grid.set(*pos, None)
 
         # Randomize the player start position and orientation
-        if self._agent_default_pos is not None:
-            self.start_pos = self._agent_default_pos
-            self.grid.set(*self._agent_default_pos, None)
-            self.start_dir = self._rand_int(0, 4)  # assuming random start direction
-        else:
-            self.place_agent()
+        self.place_agent()
 
-        if self._goal_default_pos is not None:
-            goal = Goal()
-            self.grid.set(*self._goal_default_pos, goal)
-            goal.init_pos, goal.cur_pos = self._goal_default_pos
-        else:
-            self.place_obj(Goal())
+        for i in range(4):
+            self.place_obj(Ball(self._rand_color()))
 
         self.mission = 'Reach the goal'
 
@@ -74,6 +62,6 @@ class FourRoomsEnv(MiniGridEnv):
 
 
 register(
-    id='MiniGrid-FourRooms-v0',
-    entry_point='gym_minigrid.envs:FourRoomsEnv'
+    id='TEAMGrid-FourRooms-v0',
+    entry_point='teamgrid.envs:FourRoomsEnv'
 )

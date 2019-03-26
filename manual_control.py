@@ -8,7 +8,7 @@ import gym
 import time
 from optparse import OptionParser
 
-import gym_minigrid
+import teamgrid
 
 def main():
     parser = OptionParser()
@@ -17,7 +17,7 @@ def main():
         "--env-name",
         dest="env_name",
         help="gym environment to load",
-        default='MiniGrid-MultiRoom-N6-v0'
+        default='TEAMGrid-FourRooms-v0'
     )
     (options, args) = parser.parse_args()
 

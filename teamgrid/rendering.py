@@ -13,7 +13,7 @@ class Window(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle('MiniGrid Gym Environment')
+        self.setWindowTitle('TEAMGrid Gym Environment')
 
         # Image label to display the rendering
         self.imgLabel = QLabel()
