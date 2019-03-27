@@ -63,17 +63,31 @@ class FourRoomsEnv(MiniGridEnv):
         # Place the goal objects randomly
         self.goals = []
         for i in range(self.num_goals):
-            obj = self.place_obj(Ball('green'))
+            obj = Ball('green')
+            self.place_obj(obj)
             self.goals.append(obj)
 
-    def step(self, action):
-        obss, rewards, done, info = MiniGridEnv.step(self, action)
+    def step(self, actions):
+        rewards = [0] * len(self.agents)
 
-        # TODO: when all goals are reached, the episode ends
+        # For each agent
+        for agent_idx, agent in enumerate(self.agents):
+            if actions[agent_idx] == self.actions.forward:
+                # Get the contents of the cell in front of the agent
+                fwd_pos = agent.front_pos
+                fwd_cell = self.grid.get(*fwd_pos)
 
+                # If the agent has reached a ball
+                if fwd_cell and fwd_cell.type == 'ball':
+                    self.goals.remove(fwd_cell)
+                    self.grid.set(*fwd_pos, None)
+                    rewards[agent_idx] = 1
 
+        obss, _, done, info = MiniGridEnv.step(self, actions)
 
-
+        # When all goals are reached, the episode ends
+        if len(self.goals) == 0:
+            done = True
 
         return obss, rewards, done, info
 

@@ -1105,7 +1105,6 @@ class MiniGridEnv(gym.Env):
             # Move forward
             elif action == self.actions.forward:
                 if fwd_cell == None:
-                    print('moving', agent_idx)
                     self.grid.set(*agent.cur_pos, None)
                     self.grid.set(*fwd_pos, agent)
                     agent.cur_pos = fwd_pos
