@@ -43,7 +43,8 @@ OBJECT_TO_IDX = {
     'ball'          : 6,
     'box'           : 7,
     'goal'          : 8,
-    'lava'          : 9
+    'lava'          : 9,
+    'agent'         : 10,
 }
 
 IDX_TO_OBJECT = dict(zip(OBJECT_TO_IDX.values(), OBJECT_TO_IDX.keys()))
@@ -107,6 +108,61 @@ class WorldObj:
         c = COLORS[self.color]
         r.setLineColor(c[0], c[1], c[2])
         r.setColor(c[0], c[1], c[2])
+
+class Agent(WorldObj):
+    def __init__(self, color='red'):
+        super().__init__('agent', color)
+
+        # Object being carried
+        self.carrying = None
+
+        # Direction the agent is pointing
+        self.dir = 0
+
+    def can_overlap(self):
+        return False
+
+    @property
+    def dir_vec(self):
+        """
+        Get the direction vector for the agent, pointing in the direction
+        of forward movement.
+        """
+
+        assert self.dir >= 0 and self.dir < 4
+        return DIR_TO_VEC[self.dir]
+
+    @property
+    def right_vec(self):
+        """
+        Get the vector pointing to the right of the agent.
+        """
+
+        dx, dy = self.dir_vec
+        return np.array((-dy, dx))
+
+    @property
+    def front_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+
+        return self.cur_pos + self.dir_vec
+
+    def render(self, r):
+        self._set_color(r)
+        r.push()
+        r.translate(
+            CELL_PIXELS * 0.5,
+            CELL_PIXELS * 0.5
+        )
+        r.rotate(self.dir * 90)
+        r.drawPolygon([
+            (-12, 10),
+            ( 12,  0),
+            (-12, -10)
+        ])
+        r.pop()
 
 class Goal(WorldObj):
     def __init__(self):
@@ -708,10 +764,6 @@ class MiniGridEnv(gym.Env):
         self.max_steps = max_steps
         self.see_through_walls = see_through_walls
 
-        # Starting position and direction for the agent
-        self.start_pos = None
-        self.start_dir = None
-
         # Initialize the RNG
         self.seed(seed=seed)
 
@@ -719,25 +771,14 @@ class MiniGridEnv(gym.Env):
         self.reset()
 
     def reset(self):
+        self.agents = []
+
         # Generate a new random grid at the start of each episode
         # To keep the same grid for each episode, call env.seed() with
         # the same seed before calling env.reset()
         self._gen_grid(self.width, self.height)
 
-        # These fields should be defined by _gen_grid
-        assert self.start_pos is not None
-        assert self.start_dir is not None
-
-        # Check that the agent doesn't overlap with an object
-        start_cell = self.grid.get(*self.start_pos)
-        assert start_cell is None or start_cell.can_overlap()
-
-        # Place the agent in the starting position and direction
-        self.agent_pos = self.start_pos
-        self.agent_dir = self.start_dir
-
-        # Item picked up, being carried, initially nothing
-        self.carrying = None
+        assert len(self.agents) > 0, "must create at least one agent"
 
         # Step count since episode start
         self.step_count = 0
@@ -930,10 +971,6 @@ class MiniGridEnv(gym.Env):
             if self.grid.get(*pos) != None:
                 continue
 
-            # Don't place the object where the agent is
-            if np.array_equal(pos, self.start_pos):
-                continue
-
             # Check if there is a filtering criterion
             if reject_fn and reject_fn(self, pos):
                 continue
@@ -952,48 +989,25 @@ class MiniGridEnv(gym.Env):
         self,
         top=None,
         size=None,
-        rand_dir=True,
+        dir=None,
         max_tries=math.inf
     ):
         """
         Set the agent's starting point at an empty position in the grid
         """
 
-        self.start_pos = None
-        pos = self.place_obj(None, top, size, max_tries=max_tries)
-        self.start_pos = pos
+        # TODO: pick random agent color
+        agent = Agent()
 
-        if rand_dir:
-            self.start_dir = self._rand_int(0, 4)
+        pos = self.place_obj(agent, top, size, max_tries=max_tries)
+
+        if dir is None:
+            dir = self._rand_int(0, 4)
+        agent.dir = dir
+
+        self.agents.append(agent)
 
         return pos
-
-    @property
-    def dir_vec(self):
-        """
-        Get the direction vector for the agent, pointing in the direction
-        of forward movement.
-        """
-
-        assert self.agent_dir >= 0 and self.agent_dir < 4
-        return DIR_TO_VEC[self.agent_dir]
-
-    @property
-    def right_vec(self):
-        """
-        Get the vector pointing to the right of the agent.
-        """
-
-        dx, dy = self.dir_vec
-        return np.array((-dy, dx))
-
-    @property
-    def front_pos(self):
-        """
-        Get the position of the cell that is right in front of the agent
-        """
-
-        return self.agent_pos + self.dir_vec
 
     def get_view_coords(self, i, j):
         """
@@ -1191,6 +1205,9 @@ class MiniGridEnv(gym.Env):
         Generate the agent's view (partially observable, low-resolution encoding)
         """
 
+        # FIXME
+        return None
+
         grid, vis_mask = self.gen_obs_grid()
 
         # Encode the partially observable view into a numpy array
@@ -1281,6 +1298,7 @@ class MiniGridEnv(gym.Env):
         # Render the whole grid
         self.grid.render(r, CELL_PIXELS)
 
+        """
         # Draw the agent
         r.push()
         r.translate(
@@ -1296,7 +1314,9 @@ class MiniGridEnv(gym.Env):
             (-12, -10)
         ])
         r.pop()
+        """
 
+        """
         # Compute which cells are visible to the agent
         _, vis_mask = self.gen_obs_grid()
 
@@ -1324,6 +1344,7 @@ class MiniGridEnv(gym.Env):
                     CELL_PIXELS,
                     255, 255, 255, 75
                 )
+        """
 
         r.endFrame()
 
