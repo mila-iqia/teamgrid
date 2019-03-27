@@ -65,9 +65,12 @@ def main():
             print("unknown key %s" % keyName)
             return
 
-        obs, reward, done, info = env.step(action)
+        num_agents = len(env.agents)
+        actions = [action] * num_agents
 
-        print('step=%s, reward=%.2f' % (env.step_count, reward))
+        obss, rewards, done, info = env.step(actions)
+
+        print('step={}, rewards={}'.format(env.step_count, rewards))
 
         if done:
             print('done!')

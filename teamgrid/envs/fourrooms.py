@@ -9,9 +9,10 @@ class FourRoomsEnv(MiniGridEnv):
     Classical 4 rooms gridworld environment.
     """
 
-    def __init__(self, num_agents=4, num_objs=4):
+    def __init__(self, num_agents=4, num_goals=4):
         self.num_agents = num_agents
-        self.num_objs = num_objs
+        self.num_goals = num_goals
+
         super().__init__(
             grid_size=19,
             max_steps=100
@@ -59,19 +60,22 @@ class FourRoomsEnv(MiniGridEnv):
         for i in range(self.num_agents):
             self.place_agent()
 
-        for i in range(self.num_objs):
-            self.place_obj(Ball(self._rand_color()))
+        # Place the goal objects randomly
+        self.goals = []
+        for i in range(self.num_goals):
+            obj = self.place_obj(Ball('green'))
+            self.goals.append(obj)
 
     def step(self, action):
-        obs, reward, done, info = MiniGridEnv.step(self, action)
+        obss, rewards, done, info = MiniGridEnv.step(self, action)
+
+        # TODO: when all goals are reached, the episode ends
 
 
 
 
 
-
-        return obs, reward, done, info
-
+        return obss, rewards, done, info
 
 register(
     id='TEAMGrid-FourRooms-v0',
