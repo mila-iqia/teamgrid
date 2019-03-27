@@ -6,12 +6,19 @@ from teamgrid.register import register
 
 class FourRoomsEnv(MiniGridEnv):
     """
-    Classical 4 rooms gridworld environmnet.
-    Can specify agent and goal position, if not it set at random.
+    Classical 4 rooms gridworld environment.
     """
 
-    def __init__(self):
-        super().__init__(grid_size=19, max_steps=100)
+    def __init__(self, num_agents=4, num_objs=4):
+        self.num_agents = num_agents
+        self.num_objs = num_objs
+        super().__init__(
+            grid_size=19,
+            max_steps=100
+        )
+
+        # Only allow turn left/turn right/forward movement actions
+        self.action_space = spaces.Discrete(self.actions.forward+1)
 
     def _gen_grid(self, width, height):
         # Create the grid
@@ -49,15 +56,20 @@ class FourRoomsEnv(MiniGridEnv):
                     self.grid.set(*pos, None)
 
         # Randomize the player start position and orientation
-        self.place_agent()
+        for i in range(self.num_agents):
+            self.place_agent()
 
-        for i in range(4):
+        for i in range(self.num_objs):
             self.place_obj(Ball(self._rand_color()))
-
-        self.mission = 'Reach the goal'
 
     def step(self, action):
         obs, reward, done, info = MiniGridEnv.step(self, action)
+
+
+
+
+
+
         return obs, reward, done, info
 
 

@@ -151,6 +151,7 @@ class Agent(WorldObj):
 
     def render(self, r):
         self._set_color(r)
+        #r.setLineColor(255, 255, 255)
         r.push()
         r.translate(
             CELL_PIXELS * 0.5,
@@ -745,9 +746,6 @@ class MiniGridEnv(gym.Env):
             shape=(self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
         )
-        self.observation_space = spaces.Dict({
-            'image': self.observation_space
-        })
 
         # Range of possible rewards
         self.reward_range = (0, 1)
@@ -996,8 +994,16 @@ class MiniGridEnv(gym.Env):
         Set the agent's starting point at an empty position in the grid
         """
 
-        # TODO: pick random agent color
-        agent = Agent()
+        # Pick random agent color
+        free_colors = COLOR_NAMES[:]
+        for agent in self.agents:
+            if agent.color in free_colors:
+                free_colors.remove(agent.color)
+        if len(free_colors) == 0:
+            free_colors = COLOR_NAMES[:]
+        color = self._rand_elem(free_colors)
+
+        agent = Agent(color=color)
 
         pos = self.place_obj(agent, top, size, max_tries=max_tries)
 
@@ -1213,19 +1219,7 @@ class MiniGridEnv(gym.Env):
         # Encode the partially observable view into a numpy array
         image = grid.encode(vis_mask)
 
-        assert hasattr(self, 'mission'), "environments must define a textual mission string"
-
-        # Observations are dictionaries containing:
-        # - an image (partially observable view of the environment)
-        # - the agent's direction/orientation (acting as a compass)
-        # - a textual mission string (instructions for the agent)
-        obs = {
-            'image': image,
-            'direction': self.agent_dir,
-            'mission': self.mission
-        }
-
-        return obs
+        return image
 
     def get_obs_render(self, obs, tile_pixels=CELL_PIXELS//2):
         """
@@ -1233,7 +1227,7 @@ class MiniGridEnv(gym.Env):
         """
 
         if self.obs_render == None:
-            from gym_minigrid.rendering import Renderer
+            from teamgrid.rendering import Renderer
             self.obs_render = Renderer(
                 self.agent_view_size * tile_pixels,
                 self.agent_view_size * tile_pixels
@@ -1281,7 +1275,7 @@ class MiniGridEnv(gym.Env):
             return
 
         if self.grid_render is None:
-            from gym_minigrid.rendering import Renderer
+            from teamgrid.rendering import Renderer
             self.grid_render = Renderer(
                 self.width * CELL_PIXELS,
                 self.height * CELL_PIXELS,
@@ -1290,31 +1284,10 @@ class MiniGridEnv(gym.Env):
 
         r = self.grid_render
 
-        if r.window:
-            r.window.setText(self.mission)
-
         r.beginFrame()
 
         # Render the whole grid
         self.grid.render(r, CELL_PIXELS)
-
-        """
-        # Draw the agent
-        r.push()
-        r.translate(
-            CELL_PIXELS * (self.agent_pos[0] + 0.5),
-            CELL_PIXELS * (self.agent_pos[1] + 0.5)
-        )
-        r.rotate(self.agent_dir * 90)
-        r.setLineColor(255, 0, 0)
-        r.setColor(255, 0, 0)
-        r.drawPolygon([
-            (-12, 10),
-            ( 12,  0),
-            (-12, -10)
-        ])
-        r.pop()
-        """
 
         """
         # Compute which cells are visible to the agent
