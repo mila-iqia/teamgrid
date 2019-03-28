@@ -31,8 +31,19 @@ There is a UI application which allows you to manually control the agent with th
 The environment being run can be selected with the `--env-name` option, eg:
 
 ```
-./manual_control.py --env-name MiniGrid-Empty-8x8-v0
+./manual_control.py --env-name TEAMGrid-FourRooms-v0
 ```
+
+## Included Environments
+
+The environments listed below are implemented in the [teamgrid/envs](/teamgrid/envs) directory.
+Each environment provides one or more configurations registered with OpenAI gym. Each environment
+is also programmatically tunable in terms of size/complexity, which is useful for curriculum learning
+or to fine-tune difficulty.
+
+### Four rooms
+
+Four room environment. N agents and M goals are randomly placed in any of the rooms. The agents get +1 reward for stepping over a goal object. All M objects must be collected for the episode to terminate.
 
 ## Design
 
@@ -70,14 +81,3 @@ You can define your own reward function by creating a class derived
 from `MiniGridEnv`. Extending the environment with new object types or action
 should be very easy. If you wish to do this, you should take a look at the
 [teamgrid/minigrid.py](teamgrid/minigrid.py) source file.
-
-## Included Environments
-
-The environments listed below are implemented in the [teamgrid/envs](/teamgrid/envs) directory.
-Each environment provides one or more configurations registered with OpenAI gym. Each environment
-is also programmatically tunable in terms of size/complexity, which is useful for curriculum learning
-or to fine-tune difficulty.
-
-### Four rooms
-
-TBD
