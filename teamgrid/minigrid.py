@@ -110,14 +110,14 @@ class WorldObj:
         r.setColor(c[0], c[1], c[2])
 
 class Agent(WorldObj):
-    def __init__(self, color='red'):
+    def __init__(self, color='red', dir=0):
         super().__init__('agent', color)
 
         # Object being carried
         self.carrying = None
 
         # Direction the agent is pointing
-        self.dir = 0
+        self.dir = dir
 
     def can_overlap(self):
         return False
@@ -491,6 +491,11 @@ class Grid:
         for i in range(self.width):
             for j in range(self.height):
                 v = self.get(i, j)
+
+                # Agents have a direction and must be rotated
+                if isinstance(v, Agent):
+                    v = Agent(v.color, (v.dir - 1) % 4)
+
                 grid.set(j, grid.height - 1 - i, v)
 
         return grid
@@ -593,6 +598,8 @@ class Grid:
                             state = 1
                         if hasattr(v, 'is_locked') and v.is_locked:
                             state = 2
+                        if isinstance(v, Agent):
+                            state = v.dir
 
                         array[i, j, 0] = OBJECT_TO_IDX[v.type]
                         array[i, j, 1] = COLOR_TO_IDX[v.color]
@@ -620,6 +627,7 @@ class Grid:
 
                 objType = IDX_TO_OBJECT[typeIdx]
                 color = IDX_TO_COLOR[colorIdx]
+
                 # State, 0: open, 1: closed, 2: locked
                 is_open = state == 0
                 is_locked = state == 2
@@ -640,6 +648,8 @@ class Grid:
                     v = Goal()
                 elif objType == 'lava':
                     v = Lava()
+                elif objType == 'agent':
+                    v = Agent(color, dir=state)
                 else:
                     assert False, "unknown obj type in decode '%s'" % objType
 
@@ -1196,7 +1206,7 @@ class MiniGridEnv(gym.Env):
 
         return imgs
 
-    def get_obs_render(self, obs, tile_pixels=CELL_PIXELS//2):
+    def get_obs_render(self, obs, agent_color, tile_pixels=CELL_PIXELS//2):
         """
         Render an agent observation for visualization
         """
@@ -1226,8 +1236,9 @@ class MiniGridEnv(gym.Env):
             CELL_PIXELS * (self.agent_view_size - 0.5)
         )
         r.rotate(3 * 90)
-        r.setLineColor(255, 0, 0)
-        r.setColor(255, 0, 0)
+        c = COLORS[agent_color]
+        r.setLineColor(*c)
+        r.setColor(*c)
         r.drawPolygon([
             (-12, 10),
             ( 12,  0),
@@ -1295,6 +1306,13 @@ class MiniGridEnv(gym.Env):
         """
 
         r.endFrame()
+
+        # Render agent observations on the left side of the window
+        if mode == 'human':
+            obss = self.gen_obss()
+            for idx, obs in enumerate(obss):
+                pixmap = self.get_obs_render(obs, self.agents[idx].color)
+                r.window.setObsPixmap(idx, pixmap)
 
         if mode == 'rgb_array':
             return r.getArray()

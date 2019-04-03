@@ -19,28 +19,38 @@ class Window(QMainWindow):
         self.imgLabel = QLabel()
         self.imgLabel.setFrameStyle(QFrame.Panel | QFrame.Sunken)
 
-        """
-        # Text box for the mission
-        self.missionBox = QTextEdit()
-        self.missionBox.setReadOnly(True)
-        self.missionBox.setMinimumSize(400, 100)
-        """
+        # Image labels to display the agent observations
+        self.obsLabels = []
+        for i in range(8):
+            obsLabel = QLabel()
 
-        # Center the image
+            pixmap = QPixmap(16*7, 16*7)
+            pixmap.fill(QColor("grey"))
+            obsLabel.setPixmap(pixmap)
+
+            #obsLabel.setMinimumSize(32, 32)
+            obsLabel.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+            self.obsLabels.append(obsLabel)
+
+        vbox_obs = QVBoxLayout()
+        vbox_obs.addStretch(1)
+        for j in range(4):
+            hbox_obs = QHBoxLayout()
+            hbox_obs.addStretch(1)
+            for i in range(2):
+                hbox_obs.addWidget(self.obsLabels[2 * j + i])
+                hbox_obs.addStretch(1)
+            vbox_obs.addLayout(hbox_obs)
+            vbox_obs.addStretch(1)
+
         hbox = QHBoxLayout()
-        #hbox.addStretch(1)
+        hbox.addLayout(vbox_obs)
         hbox.addWidget(self.imgLabel)
-        #hbox.addStretch(1)
-
-        # Arrange widgets vertically
-        vbox = QVBoxLayout()
-        vbox.addLayout(hbox)
-        #vbox.addWidget(self.missionBox)
 
         # Create a main widget for the window
         mainWidget = QWidget(self)
         self.setCentralWidget(mainWidget)
-        mainWidget.setLayout(vbox)
+        mainWidget.setLayout(hbox)
 
         # Show the application window
         self.show()
@@ -56,6 +66,9 @@ class Window(QMainWindow):
 
     def setPixmap(self, pixmap):
         self.imgLabel.setPixmap(pixmap)
+
+    def setObsPixmap(self, idx, pixmap):
+        self.obsLabels[idx].setPixmap(pixmap)
 
     def setKeyDownCb(self, callback):
         self.keyDownCb = callback
