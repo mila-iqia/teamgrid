@@ -43,7 +43,17 @@ or to fine-tune difficulty.
 
 ### Four rooms
 
+Registered ids:
+- `TEAMGrid-FourRooms-v0`
+
 Four room environment. N agents and M goals are randomly placed in any of the rooms. The agents get +1 reward for stepping over a goal object. All M objects must be collected for the episode to terminate.
+
+### Switch
+
+Registered ids:
+- `TEAMGrid-Switch-v0`
+
+Two agents are placed in a two room environment. There is a goal object in the room on the right. The room on the right is dark until the switch in the room on the left is turned on. To maximize efficiency, one agent should go in the room  on the right while the other turns on the switch in the room on the left.
 
 ## Design
 
