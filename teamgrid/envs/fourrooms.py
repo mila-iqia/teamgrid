@@ -56,16 +56,16 @@ class FourRoomsEnv(MiniGridEnv):
                     pos = (self._rand_int(xL + 1, xR), yB)
                     self.grid.set(*pos, None)
 
-        # Randomize the player start position and orientation
-        for i in range(self.num_agents):
-            self.place_agent()
-
         # Place the goal objects randomly
         self.goals = []
         for i in range(self.num_goals):
             obj = Ball('green')
             self.place_obj(obj)
             self.goals.append(obj)
+
+        # Randomize the player start positions and orientations
+        for i in range(self.num_agents):
+            self.place_agent()
 
     def step(self, actions):
         rewards = [0] * len(self.agents)

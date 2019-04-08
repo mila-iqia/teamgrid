@@ -44,7 +44,8 @@ OBJECT_TO_IDX = {
     'box'           : 7,
     'goal'          : 8,
     'lava'          : 9,
-    'agent'         : 10,
+    'switch'        : 10,
+    'agent'         : 11,
 }
 
 IDX_TO_OBJECT = dict(zip(OBJECT_TO_IDX.values(), OBJECT_TO_IDX.keys()))
@@ -328,6 +329,57 @@ class Door(WorldObj):
         else:
             # Draw door handle
             r.drawCircle(CELL_PIXELS * 0.75, CELL_PIXELS * 0.5, 2)
+
+class Switch(WorldObj):
+    """
+    On/off switch to control lighting/visibility in an area of the grid
+    """
+
+    def __init__(self, color, is_on=True):
+        super().__init__('switch', color)
+        self.is_on = True if is_on else False
+
+    def see_behind(self):
+        return False
+
+    def toggle(self, env, pos):
+        self.is_on = not self.is_on
+        return True
+
+    def render(self, r):
+        c = COLORS[self.color]
+        r.setLineColor(c[0], c[1], c[2])
+        r.setColor(0, 0, 0)
+
+        r.drawPolygon([
+            (1            , CELL_PIXELS-1),
+            (CELL_PIXELS-1, CELL_PIXELS-1),
+            (CELL_PIXELS-1,             1),
+            (1            ,             1)
+        ])
+
+        # Switch middle part
+        r.drawPolygon([
+            (CELL_PIXELS//2 - 2,  14),
+            (CELL_PIXELS//2 + 2,  14),
+            (CELL_PIXELS//2 + 2,  18),
+            (CELL_PIXELS//2 - 2,  18),
+        ])
+
+        if self.is_on:
+            r.drawPolygon([
+                (CELL_PIXELS//2 - 2,  5),
+                (CELL_PIXELS//2 + 2,  5),
+                (CELL_PIXELS//2 + 2,  14),
+                (CELL_PIXELS//2 - 2,  14),
+            ])
+        else:
+            r.drawPolygon([
+                (CELL_PIXELS//2 - 2,  18),
+                (CELL_PIXELS//2 + 2,  18),
+                (CELL_PIXELS//2 + 2,  27),
+                (CELL_PIXELS//2 - 2,  27),
+            ])
 
 class Key(WorldObj):
     def __init__(self, color='blue'):
@@ -648,6 +700,8 @@ class Grid:
                     v = Goal()
                 elif objType == 'lava':
                     v = Lava()
+                elif objType == 'switch':
+                    v = Switch(color, state)
                 elif objType == 'agent':
                     v = Agent(color, dir=state)
                 else:
@@ -713,12 +767,12 @@ class MiniGridEnv(gym.Env):
         right = 1
         forward = 2
 
+        # Toggle/activate an object
+        toggle = 5
         # Pick up an object
         pickup = 3
         # Drop an object
         drop = 4
-        # Toggle/activate an object
-        toggle = 5
 
         # Done completing task
         done = 6
@@ -1100,6 +1154,7 @@ class MiniGridEnv(gym.Env):
             # Get the contents of the cell in front of the agent
             fwd_cell = self.grid.get(*fwd_pos)
 
+            # Get the action for this agent
             action = actions[agent_idx]
 
             # Rotate left
@@ -1123,6 +1178,11 @@ class MiniGridEnv(gym.Env):
             elif action == self.actions.done:
                 pass
 
+            # Toggle/activate an object
+            elif action == self.actions.toggle:
+                if fwd_cell:
+                    fwd_cell.toggle(self, fwd_pos)
+
             else:
                 assert False, "unknown action"
 
@@ -1141,11 +1201,6 @@ class MiniGridEnv(gym.Env):
                     self.grid.set(*fwd_pos, self.carrying)
                     self.carrying.cur_pos = fwd_pos
                     self.carrying = None
-
-            # Toggle/activate an object
-            elif action == self.actions.toggle:
-                if fwd_cell:
-                    fwd_cell.toggle(self, fwd_pos)
             """
 
         if self.step_count >= self.max_steps:
