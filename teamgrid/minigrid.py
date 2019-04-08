@@ -335,16 +335,36 @@ class Switch(WorldObj):
     On/off switch to control lighting/visibility in an area of the grid
     """
 
-    def __init__(self, color, is_on=True):
+    def __init__(
+        self,
+        color,
+        is_on=True,
+        env=None,
+        left=None,
+        top=None,
+        width=None,
+        height=None,
+    ):
         super().__init__('switch', color)
+        self.left = left
+        self.top = top
+        self.width = width
+        self.height = height
         self.is_on = True if is_on else False
+
+        if env:
+            self._set_light_mask(env)
 
     def see_behind(self):
         return False
 
     def toggle(self, env, pos):
         self.is_on = not self.is_on
+        self._set_light_mask(env)
         return True
+
+    def _set_light_mask(self, env):
+        env.light_mask[self.left:(self.left+self.width), self.top:(self.top+self.height)] = self.is_on
 
     def render(self, r):
         c = COLORS[self.color]
@@ -839,6 +859,9 @@ class MiniGridEnv(gym.Env):
 
         self.agents = []
 
+        # Map of which cells in the map are illuminated
+        self.light_mask = np.ones(shape=(self.width, self.height), dtype=np.bool)
+
         # Generate a new random grid at the start of each episode
         # To keep the same grid for each episode, call env.seed() with
         # the same seed before calling env.reset()
@@ -1234,6 +1257,25 @@ class MiniGridEnv(gym.Env):
         else:
             vis_mask = np.ones(shape=(grid.width, grid.height), dtype=np.bool)
 
+        # Compute the absolute coordinates of the bottom-left corner
+        # of the agent's view area
+        f_vec = agent.dir_vec
+        r_vec = agent.right_vec
+        top_left = agent.cur_pos + f_vec * (self.agent_view_size-1) - r_vec * (self.agent_view_size // 2)
+
+        # For each cell in the visibility mask
+        for vis_j in range(0, self.agent_view_size):
+            for vis_i in range(0, self.agent_view_size):
+                # Compute the world coordinates of this cell
+                abs_i, abs_j = top_left - (f_vec * vis_j) + (r_vec * vis_i)
+
+                if abs_i < 0 or abs_i >= self.width or abs_j < 0 or abs_j >= self.height:
+                    continue
+
+                # If this cell is not lit, mark is as not visible
+                if not self.light_mask[abs_i, abs_j]:
+                    vis_mask[vis_i, vis_j] = False
+
         # Make it so the agent sees what it's carrying
         # We do this by placing the carried object at the agent's position
         # in the agent's partially observable view
@@ -1359,6 +1401,21 @@ class MiniGridEnv(gym.Env):
                     255, 255, 255, 75
                 )
         """
+
+        for j in range(0, self.height):
+            for i in range(0, self.width):
+                # If this cell is lit, do nothing
+                if self.light_mask[i, j]:
+                    continue
+
+                # Darken the cell
+                r.fillRect(
+                    i * CELL_PIXELS,
+                    j * CELL_PIXELS,
+                    CELL_PIXELS,
+                    CELL_PIXELS,
+                    0, 0, 0, 150
+                )
 
         r.endFrame()
 
