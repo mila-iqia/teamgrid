@@ -1085,14 +1085,14 @@ class MiniGridEnv(gym.Env):
         Set the agent's starting point at an empty position in the grid
         """
 
-        # Pick random agent color
+        # Pick agent color (not random to allow recognizing each trained agent)
         free_colors = COLOR_NAMES[:]
         for agent in self.agents:
             if agent.color in free_colors:
                 free_colors.remove(agent.color)
         if len(free_colors) == 0:
             free_colors = COLOR_NAMES[:]
-        color = self._rand_elem(free_colors)
+        color = free_colors[0]
 
         agent = Agent(color=color)
 
