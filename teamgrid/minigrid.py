@@ -1303,7 +1303,7 @@ class MiniGridEnv(gym.Env):
 
         return imgs
 
-    def get_obs_render(self, obs, agent_color, tile_pixels=CELL_PIXELS//2):
+    def get_obs_render(self, obs, agent_color, tile_pixels=CELL_PIXELS//2, mode='pixmap'):
         """
         Render an agent observation for visualization
         """
@@ -1344,6 +1344,9 @@ class MiniGridEnv(gym.Env):
         r.pop()
 
         r.endFrame()
+
+        if mode == 'pixmap':
+            return r.getPixmap()
 
         return r.getArray()
 
