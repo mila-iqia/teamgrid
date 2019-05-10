@@ -1345,7 +1345,7 @@ class MiniGridEnv(gym.Env):
 
         r.endFrame()
 
-        return r.getArray()
+        return r.getPixmap()
 
     def render(self, mode='human', close=False):
         """
