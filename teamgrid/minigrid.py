@@ -1226,10 +1226,10 @@ class MiniGridEnv(gym.Env):
                     self.carrying = None
             """
 
+        done = False
         if self.step_count >= self.max_steps:
             done = True
 
-        done = False
         rewards = [0] * len(self.agents)
 
         obss = self.gen_obss()
