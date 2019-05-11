@@ -9,9 +9,9 @@ class FourRoomsEnv(MiniGridEnv):
     Classical 4 rooms gridworld environment.
     """
 
-    def __init__(self, num_agents=4, num_goals=4):
+    def __init__(self, num_agents=4, num_goals=None):
         self.num_agents = num_agents
-        self.num_goals = num_goals
+        self.num_goals = num_goals if num_goals is not None else num_agents * 3
 
         super().__init__(
             grid_size=19,
