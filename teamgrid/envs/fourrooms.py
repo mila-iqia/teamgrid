@@ -9,9 +9,10 @@ class FourRoomsEnv(MiniGridEnv):
     Classical 4 rooms gridworld environment.
     """
 
-    def __init__(self, num_agents=4, num_goals=None):
+    def __init__(self, num_agents=4, num_goals=None, shared_rewards=False):
         self.num_agents = num_agents
         self.num_goals = num_goals if num_goals is not None else num_agents * 3
+        self.shared_rewards = shared_rewards
 
         super().__init__(
             grid_size=19,
@@ -88,6 +89,11 @@ class FourRoomsEnv(MiniGridEnv):
         # When all goals are reached, the episode ends
         if len(self.goals) == 0:
             done = True
+
+        if self.shared_rewards:
+            total_reward = sum(rewards)
+            for i in range(len(rewards)):
+                rewards[i] = total_reward
 
         return obss, rewards, done, info
 
