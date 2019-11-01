@@ -6,9 +6,17 @@ class SwitchEnv(MiniGridEnv):
     Environment with a light switch to turn lights on/off
     """
 
-    def __init__(self, num_agents=2, num_goals=1):
+    def __init__(
+        self,
+        num_agents=2,
+        num_goals=1,
+        reward_switch=False,
+        reward_all=False,
+    ):
         self.num_agents = num_agents
         self.num_goals = num_goals
+        self.reward_switch = reward_switch
+        self.reward_all = reward_all
 
         super().__init__(
             width=21,
@@ -55,21 +63,35 @@ class SwitchEnv(MiniGridEnv):
         for i in range(self.num_agents):
             self.place_agent()
 
+        # Switch previously toggled
+        self.toggled = False
+
     def step(self, actions):
         rewards = [0] * len(self.agents)
 
         # For each agent
         for agent_idx, agent in enumerate(self.agents):
-            if actions[agent_idx] == self.actions.forward:
-                # Get the contents of the cell in front of the agent
-                fwd_pos = agent.front_pos
-                fwd_cell = self.grid.get(*fwd_pos)
+            # Get the contents of the cell in front of the agent
+            fwd_pos = agent.front_pos
+            fwd_cell = self.grid.get(*fwd_pos)
 
-                # If the agent has reached a ball
+            # If the agent has reached a ball
+            if actions[agent_idx] == self.actions.forward:
                 if fwd_cell and fwd_cell.type == 'ball':
                     self.goals.remove(fwd_cell)
                     self.grid.set(*fwd_pos, None)
-                    rewards[agent_idx] = 1
+
+                    if self.reward_all:
+                        rewards = [1] * len(self.agents)
+                    else:
+                        rewards[agent_idx] = 1
+
+            # If the agent has toggled a switch for the first time
+            if self.reward_switch and not self.toggled:
+                if actions[agent_idx] == self.actions.toggle:
+                    if fwd_cell and fwd_cell.type == 'switch':
+                        rewards[agent_idx] = 1
+                        self.toggled = True
 
         obss, _, done, info = MiniGridEnv.step(self, actions)
 
@@ -79,7 +101,25 @@ class SwitchEnv(MiniGridEnv):
 
         return obss, rewards, done, info
 
+class SwitchRSwitch(SwitchEnv):
+    def __init__(self):
+        super().__init__(reward_switch=True)
+
+class SwitchRAll(SwitchEnv):
+    def __init__(self):
+        super().__init__(reward_all=True)
+
 register(
     id='TEAMGrid-Switch-v0',
     entry_point='teamgrid.envs:SwitchEnv'
+)
+
+register(
+    id='TEAMGrid-SwitchRSwitch-v0',
+    entry_point='teamgrid.envs:SwitchRSwitch'
+)
+
+register(
+    id='TEAMGrid-SwitchRAll-v0',
+    entry_point='teamgrid.envs:SwitchRAll'
 )

@@ -52,8 +52,15 @@ Four room environment. N agents and M goals are randomly placed in any of the ro
 
 Registered ids:
 - `TEAMGrid-Switch-v0`
+- `TEAMGrid-SwitchRSwitch-v0`
+- `TEAMGrid-SwitchRAll-v0`
 
 Two agents are placed in a two room environment. There is a goal object in the room on the right. The room on the right is dark until the switch in the room on the left is turned on. To maximize efficiency, one agent should go in the room  on the right while the other turns on the switch in the room on the left.
+
+There are three variants of this environment. In the `TEAMGrid-Switch-v0` variant, only the agent who reaches the goal object gets a +1 reward. In the
+`TEAMGrid-SwitchRSwitch-v0` variant, turning on the light switch will give a reward to the agent responsible, and reaching the ball will reward the
+agent who does that. Lastly, in the `TEAMGrid-SwitchRAll-v0` variant, there is no reward for turning on the switch, but all agents get a +1 reward
+when any agent reaches the goal.
 
 ## Design
 
