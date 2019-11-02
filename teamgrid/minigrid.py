@@ -788,11 +788,11 @@ class MiniGridEnv(gym.Env):
         forward = 2
 
         # Toggle/activate an object
-        toggle = 5
+        toggle = 3
         # Pick up an object
-        pickup = 3
+        pickup = 4
         # Drop an object
-        drop = 4
+        drop = 5
 
         # Done completing task
         done = 6
