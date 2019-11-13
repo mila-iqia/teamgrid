@@ -8,7 +8,10 @@ class DualSwitchEnv(MiniGridEnv):
 
     def __init__(
         self,
+        shared_rewards=False
     ):
+        self.shared_rewards = shared_rewards
+
         super().__init__(
             width=17,
             height=9,
@@ -102,6 +105,11 @@ class DualSwitchEnv(MiniGridEnv):
         # When all goals are reached, the episode ends
         if not self.goals[0] and not self.goals[1]:
             done = True
+
+        if self.shared_rewards:
+            total_reward = sum(rewards)
+            for i in range(len(rewards)):
+                rewards[i]=total_reward
 
         return obss, rewards, done, info
 
