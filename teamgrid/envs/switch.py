@@ -6,9 +6,19 @@ class SwitchEnv(MiniGridEnv):
     Environment with a light switch to turn lights on/off
     """
 
-    def __init__(self, num_agents=2, num_goals=1):
+    def __init__(
+        self,
+        num_agents=2,
+        num_goals=1,
+        reward_switch='nneo',
+        reward_goal='one',
+        shared_rewards=False
+    ):
         self.num_agents = num_agents
         self.num_goals = num_goals
+        self.reward_switch = reward_switch
+        self.reward_goal = reward_goal
+        self.shared_rewards=shared_rewards
 
         super().__init__(
             width=21,
@@ -55,21 +65,39 @@ class SwitchEnv(MiniGridEnv):
         for i in range(self.num_agents):
             self.place_agent()
 
+        # Switch previously toggled
+        self.toggled = False
+
     def step(self, actions):
         rewards = [0] * len(self.agents)
 
         # For each agent
         for agent_idx, agent in enumerate(self.agents):
-            if actions[agent_idx] == self.actions.forward:
-                # Get the contents of the cell in front of the agent
-                fwd_pos = agent.front_pos
-                fwd_cell = self.grid.get(*fwd_pos)
+            # Get the contents of the cell in front of the agent
+            fwd_pos = agent.front_pos
+            fwd_cell = self.grid.get(*fwd_pos)
 
-                # If the agent has reached a ball
+            # If the agent has reached a ball
+            if actions[agent_idx] == self.actions.forward:
                 if fwd_cell and fwd_cell.type == 'ball':
                     self.goals.remove(fwd_cell)
                     self.grid.set(*fwd_pos, None)
-                    rewards[agent_idx] = 1
+
+                    if self.reward_goal == 'all':
+                        rewards = [1] * len(self.agents)
+                    elif self.reward_goal == 'one':
+                        rewards[agent_idx] = 1
+
+            # If the agent has toggled a switch for the first time
+            if not self.toggled:
+                if actions[agent_idx] == self.actions.toggle:
+                    if fwd_cell and fwd_cell.type == 'switch':
+                        if self.reward_switch == 'all':
+                            rewards = [1] * len(self.agents)
+                        elif self.reward_switch == 'one':
+                            rewards[agent_idx] = 1
+
+                        self.toggled = True
 
         obss, _, done, info = MiniGridEnv.step(self, actions)
 
@@ -77,9 +105,84 @@ class SwitchEnv(MiniGridEnv):
         if len(self.goals) == 0:
             done = True
 
+        if self.shared_rewards:
+            total_reward = sum(rewards)
+            for i in range(len(rewards)):
+                rewards[i] = total_reward
+
         return obss, rewards, done, info
+
+class SwitchNoneAll(SwitchEnv):
+    def __init__(self, num_agents=2,
+                 num_goals=1,
+                 shared_rewards=True
+                 ):
+        super().__init__(num_agents=num_agents,
+                         num_goals=num_goals,
+                         reward_switch='none',
+                         reward_goal='all',
+                         shared_rewards=shared_rewards
+                         )
+
+class SwitchOneOne(SwitchEnv):
+    def __init__(self, num_agents=2,
+        num_goals=1,
+        shared_rewards=True
+    ):
+        super().__init__(num_agents = num_agents,
+        num_goals = num_goals,
+        reward_switch = 'one',
+        reward_goal = 'one',
+        shared_rewards=shared_rewards
+        )
+
+class SwitchOneAll(SwitchEnv):
+    def __init__(self, num_agents=2,
+        num_goals=1,
+        shared_rewards=True
+                 ):
+        super().__init__(
+            num_agents = num_agents,
+            num_goals = num_goals,
+            reward_switch='one',
+            reward_goal='all',
+            shared_rewards=shared_rewards
+        )
+
+class SwitchAllAll(SwitchEnv):
+    def __init__(self, num_agents=2,
+                 num_goals=1,
+                 shared_rewards=True
+                 ):
+        super().__init__(
+            num_agents=num_agents,
+            num_goals=num_goals,
+            reward_switch='all',
+            reward_goal='all',
+            shared_rewards=shared_rewards
+        )
 
 register(
     id='TEAMGrid-Switch-v0',
     entry_point='teamgrid.envs:SwitchEnv'
+)
+
+register(
+    id='TEAMGrid-SwitchNoneAll-v0',
+    entry_point='teamgrid.envs:SwitchNoneAll'
+)
+
+register(
+    id='TEAMGrid-SwitchOneOne-v0',
+    entry_point='teamgrid.envs:SwitchOneOne'
+)
+
+register(
+    id='TEAMGrid-SwitchOneAll-v0',
+    entry_point='teamgrid.envs:SwitchOneAll'
+)
+
+register(
+    id='TEAMGrid-SwitchAllAll-v0',
+    entry_point='teamgrid.envs:SwitchAllAll'
 )

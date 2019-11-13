@@ -788,11 +788,11 @@ class MiniGridEnv(gym.Env):
         forward = 2
 
         # Toggle/activate an object
-        toggle = 5
+        toggle = 3
         # Pick up an object
-        pickup = 3
+        pickup = 4
         # Drop an object
-        drop = 4
+        drop = 5
 
         # Done completing task
         done = 6
@@ -1085,14 +1085,14 @@ class MiniGridEnv(gym.Env):
         Set the agent's starting point at an empty position in the grid
         """
 
-        # Pick agent color (not random to allow recognizing each trained agent)
+        # Pick random agent color
         free_colors = COLOR_NAMES[:]
         for agent in self.agents:
             if agent.color in free_colors:
                 free_colors.remove(agent.color)
         if len(free_colors) == 0:
             free_colors = COLOR_NAMES[:]
-        color = free_colors[0]
+        color = self._rand_elem(free_colors)
 
         agent = Agent(color=color)
 
@@ -1303,7 +1303,7 @@ class MiniGridEnv(gym.Env):
 
         return imgs
 
-    def get_obs_render(self, obs, agent_color, tile_pixels=CELL_PIXELS//2):
+    def get_obs_render(self, obs, agent_color, tile_pixels=CELL_PIXELS//2, mode='pixmap'):
         """
         Render an agent observation for visualization
         """
@@ -1345,7 +1345,10 @@ class MiniGridEnv(gym.Env):
 
         r.endFrame()
 
-        return r.getPixmap()
+        if mode == 'pixmap':
+            return r.getPixmap()
+
+        return r.getArray()
 
     def render(self, mode='human', close=False):
         """
