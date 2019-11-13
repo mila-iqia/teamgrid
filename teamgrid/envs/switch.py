@@ -13,6 +13,7 @@ class SwitchEnv(MiniGridEnv):
         reward_switch='nneo',
         reward_goal='one',
         shared_rewards=False
+
     ):
         self.num_agents = num_agents
         self.num_goals = num_goals
@@ -161,6 +162,20 @@ class SwitchAllAll(SwitchEnv):
             reward_goal='all',
             shared_rewards=shared_rewards
         )
+    def __init__(self):
+        super().__init__(reward_switch='none', reward_goal='all')
+
+class SwitchOneOne(SwitchEnv):
+    def __init__(self):
+        super().__init__(reward_switch='one', reward_goal='one')
+
+class SwitchOneAll(SwitchEnv):
+    def __init__(self):
+        super().__init__(reward_switch='one', reward_goal='all')
+
+class SwitchAllAll(SwitchEnv):
+    def __init__(self):
+        super().__init__(reward_switch='all', reward_goal='all')
 
 register(
     id='TEAMGrid-Switch-v0',

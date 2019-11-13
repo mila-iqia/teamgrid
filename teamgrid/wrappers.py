@@ -26,4 +26,12 @@ class RGBImgObsWrapper(gym.core.ObservationWrapper):
 
     def observation(self, obss):
         env = self.unwrapped
-        return [env.get_obs_render(o, env.agents[i].color, tile_pixels=self.tile_size) for i, o in enumerate(obss)]
+        return [
+            env.get_obs_render(
+                o,
+                env.agents[i].color,
+                tile_pixels=self.tile_size,
+                mode='rgb_array'
+            )
+            for i, o in enumerate(obss)
+        ]
