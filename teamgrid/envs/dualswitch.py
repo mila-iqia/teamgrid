@@ -111,7 +111,6 @@ class DualSwitchEnv(MiniGridEnv):
             for i in range(len(rewards)):
                 rewards[i] = total_reward
 
-
         return obss, rewards, done, info
 
 register(
