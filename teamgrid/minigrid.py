@@ -282,10 +282,10 @@ class Door(WorldObj):
     def toggle(self, env, pos):
         # If the player has the right key to open the door
         if self.is_locked:
-            if isinstance(env.carrying, Key) and env.carrying.color == self.color:
-                self.is_locked = False
-                self.is_open = True
-                return True
+            #if isinstance(env.carrying, Key) and env.carrying.color == self.color:
+            #    self.is_locked = False
+            #    self.is_open = True
+            #    return True
             return False
 
         self.is_open = not self.is_open
@@ -1079,21 +1079,25 @@ class MiniGridEnv(gym.Env):
         top=None,
         size=None,
         dir=None,
+        color=None,
         max_tries=math.inf
     ):
         """
         Set the agent's starting point at an empty position in the grid
         """
 
-        # Pick random agent color
         free_colors = COLOR_NAMES[:]
         for agent in self.agents:
             if agent.color in free_colors:
                 free_colors.remove(agent.color)
-        if len(free_colors) == 0:
-            free_colors = COLOR_NAMES[:]
-        color = self._rand_elem(free_colors)
 
+        if color is None:
+            # Pick random agent color
+            if len(free_colors) == 0:
+                free_colors = COLOR_NAMES[:]
+            color = self._rand_elem(free_colors)
+
+        assert color in free_colors
         agent = Agent(color=color)
 
         pos = self.place_obj(agent, top, size, max_tries=max_tries)
@@ -1192,7 +1196,7 @@ class MiniGridEnv(gym.Env):
 
             # Move forward
             elif action == self.actions.forward:
-                if fwd_cell == None:
+                if fwd_cell == None or fwd_cell.can_overlap():
                     self.grid.set(*agent.cur_pos, None)
                     self.grid.set(*fwd_pos, agent)
                     agent.cur_pos = fwd_pos
